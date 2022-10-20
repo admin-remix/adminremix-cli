@@ -2,19 +2,26 @@ import { readFileSync, existsSync, createReadStream } from "fs";
 import { parse } from "dotenv";
 import { parse as papaparse } from "papaparse";
 
+const ENV_FILE = ".env";
+const MAP_FILE = "map.json";
+
+export function hasENV():boolean {
+  return existsSync(ENV_FILE);
+}
+
 export function readENV():Record<string, string> {
-  if(!existsSync(".env")) {
-    throw new Error("Error: Config not found.\nMake sure to put the token in a .env file in the current directory.");
+  if(!hasENV()) {
+    throw new Error(`Error: Config not found.\nMake sure to put the token in a ${ENV_FILE} file in the current directory.`);
   }
-  const content = readFileSync(".env", "utf-8");
+  const content = readFileSync(ENV_FILE, "utf-8");
   return parse(content);
 }
 
-export function readMapping():Record<string, string> {
-  if(!existsSync("map.json")) {
-    throw new Error("Error: Mapper not found.\nMake sure to put the CSV column mapper as map.json file in the current directory.");
+export function readMapping(file?: string):Record<string, string> {
+  if(!existsSync(file || MAP_FILE)) {
+    throw new Error(`Error: Mapper not found.\nMake sure to put the CSV column mapper as ${file || MAP_FILE} file in the current directory.`);
   }
-  const content = readFileSync("map.json", "utf-8");
+  const content = readFileSync(file || MAP_FILE, "utf-8");
   return JSON.parse(content);
 }
 
