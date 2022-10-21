@@ -19,7 +19,7 @@ export async function syncUsers({
   let mappedData: Record<string, any>[] = [];
   let deletableEmails: Set<string> = new Set<string>();
 
-  {
+  if (file) {
     const csvData = await parseCSV(file);
     mappedData = csvData.map(row => mapRow(row, map));
   }
@@ -60,12 +60,15 @@ export async function syncUsers({
       }
       return acc;
     }, {
-      inputCreate: (deletableEmails.size ? Array.from(deletableEmails) : []).map(email => {
-        return {
-          email,
-          deleteAccount: true
+      inputCreate: (deletableEmails.size ? Array.from(deletableEmails) : []).reduce((acc2, cur2) => {
+        if (existingUsers[cur2]) {
+          acc2.push({
+            email: cur2,
+            deleteAccount: true
+          })
         }
-      }),
+        return acc2;
+      }, [] as any[]),
       inputUpdate: []
     } as {
       inputCreate: any[];
