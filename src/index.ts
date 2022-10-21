@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import syncAction from "./commands/sync" ;
+import syncAction from "./commands/sync";
 import mainAction from "./commands";
 const program = new Command();
 //import { version } from "../package.json";
@@ -15,7 +15,8 @@ program
 program.command('sync')
   .description('Sync entity with local CSV file. It also takes a .env file is as options.')
   .option('-e, --entity <entity-name>', 'Entity name (e.g. User)')
-  .option('-f, --file <csv-file>', 'CSV file name')
+  .option('-f, --file <csv-file>', 'CSV file name for record create or update')
+  .option('-f, --file-for-delete <csv-file-for-delete>', 'CSV file name for record delete')
   .option('-m, --map <map-file>', 'Mapping file(JSON file)')
   .option('-V, --verbose', 'Verbose mode')
   // .option('-s, --separator <char>', 'separator character', ',')

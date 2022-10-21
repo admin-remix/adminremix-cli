@@ -10,7 +10,9 @@
     "outDir": "lib",
     "rootDir": "src",
     "strict": true,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "esModuleInterop": true,
     "resolveJsonModule": true
   }
