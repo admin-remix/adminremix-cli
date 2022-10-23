@@ -97,7 +97,7 @@ async function doSync(options: Record<string, string>, environment?: Record<stri
   const map = readMapping(mapFile as string);
 
   let result = false;
-  if (entity === "User" && !map) {
+  if (entity === "User") {
     result = await syncUsers({
       client,
       map,
