@@ -28,3 +28,20 @@ Then run
 ```
 npm start -- sync User demo.csv
 ```
+
+## Make Executatable
+```
+pkg .
+```
+
+## Usage
+
+### During development
+
+#### Show description
+```
+npm start
+```
+
+
+### Final build

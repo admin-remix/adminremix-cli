@@ -17,6 +17,7 @@ program.command('sync')
   .option('-d, --file-for-delete <csv-file-for-delete>', 'CSV file name for record delete')
   .option('-m, --map <map-file>', 'Mapping file(JSON file)')
   .option('-c, --cron <cron-interval>', 'Cron interval for running this command')
+  .option('-p, --path <directory-path>', 'Directory path(could be a zip file as well)')
   .option('-V, --verbose', 'Verbose mode')
   .action(syncAction);
 

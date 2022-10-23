@@ -2,6 +2,12 @@ import { readENV, readMapping, GRAPHQL_ENDPOINT } from "../helper/utils";
 import { gql, GraphQLClient } from 'graphql-request';
 import { syncUsers } from "../actions/syncUsers";
 import { schedule, validate } from "node-cron";
+import { lstatSync, existsSync } from "fs";
+import AdmZip from "adm-zip";
+import { track } from "temp";
+import { join } from "path";
+
+const temp = track();
 
 async function doSync(options: Record<string, string>, environment?: Record<string, string>): Promise<void> {
   const env = environment || readENV();
@@ -14,11 +20,48 @@ async function doSync(options: Record<string, string>, environment?: Record<stri
     console.log("Unsupported entity: '%s'", entity);
     return;
   }
-  const file = options.file || env.CSV || env.csv;
-  const fileForDelete = options.fileForDelete || env.CSVDELETE || env.csvdelete;
+  let file = options.file || env.CSV || env.csv;
+  let fileForDelete = options.fileForDelete || env.CSVDELETE || env.csvdelete;
   if (!file && !fileForDelete) {
     console.log("CSV file not specified");
     return;
+  }
+  let folder = options.path || env.PATH || env.path || "";
+  if (folder) {
+    const stat = lstatSync(folder);
+    if (stat.isFile()) {
+      const zip = new AdmZip(folder);
+      const entries = zip.getEntries().map(m => m.entryName);
+      if (file && !entries.includes(file)) {
+        throw new Error(`File ${file} does not exist in zip.`);
+      }
+      if (fileForDelete && !entries.includes(fileForDelete)) {
+        throw new Error(`File ${fileForDelete} does not exist in zip.`);
+      }
+      const tempFolder = temp.mkdirSync({
+        prefix: "adminremix"
+      });
+      if (options.verbose) console.log('Unzipping to:', tempFolder);
+      if (file) {
+        zip.extractEntryTo(file, tempFolder);
+        file = join(tempFolder, file);
+      }
+      if (fileForDelete) {
+        zip.extractEntryTo(fileForDelete, tempFolder);
+        fileForDelete = join(tempFolder, fileForDelete);
+      }
+    } else if (stat.isDirectory()) {
+      if (file) {
+        file = join(folder, file);
+        if (!existsSync(file)) throw new Error(`File ${file} does not exist`);
+      }
+      if (fileForDelete) {
+        fileForDelete = join(folder, fileForDelete);
+        if (!existsSync(fileForDelete)) throw new Error(`File ${fileForDelete} does not exist`);
+      }
+    } else {
+      throw new Error(`Path ${folder} does not exist`);
+    }
   }
 
   const mapFile = options.map || env.MAP || env.map;
@@ -54,12 +97,13 @@ async function doSync(options: Record<string, string>, environment?: Record<stri
   const map = readMapping(mapFile as string);
 
   let result = false;
-  if (entity === "User") {
+  if (entity === "User" && !map) {
     result = await syncUsers({
       client,
       map,
       file: file as string,
-      fileForDelete: fileForDelete as string
+      fileForDelete: fileForDelete as string,
+      folder
     })
   }
   if (result) console.log("Request sent successfully");
@@ -70,7 +114,7 @@ export default async function (options: Record<string, string>): Promise<void> {
     const env = readENV();
 
     await doSync(options, env);
-
+    temp.cleanupSync();
     const cron = options.cron || env.CRON || env.cron;
     if (cron) {
       if (!validate(cron)) throw new Error("Cron expression is wrong.");
@@ -78,8 +122,10 @@ export default async function (options: Record<string, string>): Promise<void> {
       schedule(cron, () => {
         doSync(options).then(() => {
           console.log("Waiting for next interval..");
+          temp.cleanupSync();
         }).catch(e => {
           console.log("Error: %s", (e as Error).message);
+          temp.cleanupSync();
         });
       })
     }

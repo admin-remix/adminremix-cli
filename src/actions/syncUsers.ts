@@ -10,11 +10,13 @@ export async function syncUsers({
   map,
   file,
   fileForDelete,
+  folder,
 }: {
   client: GraphQLClient;
   map: Record<string, string>;
   file: string;
   fileForDelete: string;
+  folder: string;
 }): Promise<boolean> {
   let mappedData: Record<string, any>[] = [];
   let deletableEmails: Set<string> = new Set<string>();
