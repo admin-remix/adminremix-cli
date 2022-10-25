@@ -131,6 +131,7 @@ async function doSync(
       map,
       file: file as string,
       fileForDelete: fileForDelete as string,
+      options,
     });
   }
   if (result) console.log("Request sent successfully");

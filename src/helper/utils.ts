@@ -68,7 +68,8 @@ export function mapRow(csvRow: KeyVal, map: KeyVal): Record<string, any> {
   return Object.keys(csvRow).reduce((acc, cur) => {
     const mappedColumn = map[cur];
     if (mappedColumn) {
-      acc[mappedColumn] = csvRow[cur];
+      acc[mappedColumn] =
+        mappedColumn === "email" ? csvRow[cur].toLowerCase() : csvRow[cur];
     }
     return acc;
   }, {} as Record<string, any>);

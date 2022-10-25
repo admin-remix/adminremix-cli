@@ -2,17 +2,20 @@ import { gql, GraphQLClient } from "graphql-request";
 import { getUsersByEmails } from "./getUsersByEmails";
 import { createReadStream } from "fs";
 import { mapRow, parseCSV, writeToTempFile } from "../helper/utils";
+import { v4 as uuidv4 } from "uuid";
 
 export async function syncUsers({
   client,
   map,
   file,
   fileForDelete,
+  options,
 }: {
   client: GraphQLClient;
   map: Record<string, string>;
   file: string;
   fileForDelete: string;
+  options: Record<string, string | boolean>;
 }): Promise<boolean> {
   let mappedData: Record<string, any>[] = [];
   let deletableEmails: Set<string> = new Set<string>();
@@ -20,6 +23,7 @@ export async function syncUsers({
   if (file) {
     const csvData = await parseCSV(file);
     mappedData = csvData.map((row) => mapRow(row, map));
+    if (options.verbose) console.log("CSV File: %s records", mappedData.length);
   }
 
   if (fileForDelete) {
@@ -33,12 +37,19 @@ export async function syncUsers({
         `File ${fileForDelete} does not have email.\nMake sure all records have email.`
       );
     }
+    if (options.verbose)
+      console.log(
+        "CSV File for delete: %s unique email(s)",
+        deletableEmails.size
+      );
   }
 
   const existingUsers = await getUsersByEmails(client, [
     ...mappedData.map((m) => m.email),
     ...deletableEmails,
   ]);
+  if (options.verbose)
+    console.log("Found %s existing users", Object.keys(existingUsers).length);
   let intent: string[] = [];
   let tempFilePath = "";
   {
@@ -53,6 +64,7 @@ export async function syncUsers({
         if (deletableEmails.has(cur.email)) return acc;
         const found = existingUsers[cur.email];
         if (found) {
+          if (cur.password) delete cur.password;
           acc.inputUpdate.push({
             ...cur,
             ...found,
@@ -60,7 +72,7 @@ export async function syncUsers({
         } else {
           acc.inputCreate.push({
             ...cur,
-            password: "random-new-password",
+            password: cur.password || uuidv4(),
             createAccount: true,
             memberOfDepartments: [],
           });
@@ -99,6 +111,7 @@ export async function syncUsers({
     );
   }
   if (!tempFilePath) throw new Error("Cannot upload");
+  if (options.verbose) console.log("Intent: ", intent);
   const result = await client.request<{
     uploadBulkEntity: boolean;
   }>(
