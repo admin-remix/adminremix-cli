@@ -1,5 +1,27 @@
 # AdminRemix CLI Tool
 
+```
+
+           _____  __  __ _____ _   _ _____  ______ __  __ _______   __
+     /\   |  __ \|  \/  |_   _| \ | |  __ \|  ____|  \/  |_   _\ \ / /
+    /  \  | |  | | \  / | | | |  \| | |__) | |__  | \  / | | |  \ V /
+   / /\ \ | |  | | |\/| | | | | . ` |  _  /|  __| | |\/| | | |   > <
+  / ____ \| |__| | |  | |_| |_| |\  | | \ \| |____| |  | |_| |_ / . \
+ /_/    \_\_____/|_|  |_|_____|_| \_|_|  \_\______|_|  |_|_____/_/ \_\
+
+
+Usage: assetremix-cli [options] [command]
+
+CLI to manage your AssetRemix workspace
+
+Options:
+  -h, --help      display help for command
+
+Commands:
+  sync [options]  Sync entity with local CSV file. It also takes a .env file is as options.
+  help [command]  display help for command
+```
+
 ## Installation
 
 ```
