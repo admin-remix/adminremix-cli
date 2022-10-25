@@ -13,7 +13,7 @@ program
 program
   .command("sync")
   .description(
-    "Sync entity with local CSV file. It also takes a .env file is as options."
+    "Sync entity with local CSV files. You can also provide a .env file for options."
   )
   .option("-t, --token <api-key>", "AssetRemix API key a.k.a token")
   .option("-e, --entity <entity-name>", "Entity name (e.g. User)")
