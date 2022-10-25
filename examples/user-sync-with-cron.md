@@ -1,4 +1,9 @@
-# Example - Sync with Cron
+# Example - User Sync with Cron
+
+The following example will create/update users from `User-Update.csv` file.
+The `Map.json` file will be used to map the columns from these custom columns
+to AssetRemix fields. The program will use the provided cron expression to
+schedule and run in a loop.
 
 _Note: The program will not end and will wait for next interval._
 

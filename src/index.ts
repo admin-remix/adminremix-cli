@@ -6,7 +6,7 @@ import { textSync } from "figlet";
 const program = new Command();
 
 program
-  .name("assetremix-cli")
+  .name("adminremix-cli")
   .description("CLI to manage your AssetRemix workspace")
   .addHelpText("before", textSync("ADMINREMIX", "Big"));
 

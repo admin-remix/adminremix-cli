@@ -1,4 +1,8 @@
-# Example - One Time Sync
+# Example - User Sync
+
+The following example will create/update users from `User-Create.csv` file and
+will delete users from `User-Delete.csv` file if exist. The `Map.json` file will
+be used to map the columns from these custom columns to AssetRemix fields.
 
 **Map.json**
 
