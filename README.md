@@ -42,14 +42,16 @@ npm start -- sync User demo.csv
 pkg .
 ```
 
-## Usage
+## ENV vs Options
 
-### During development
+Following CLI options are also available through ENV file
 
-#### Show description
-
-```
-npm start
-```
-
-### Final build
+|         CLI Option          |    ENV Key    |
+| :-------------------------: | :-----------: |
+|      `-t` or `--token`      |     TOKEN     |
+|       `-m` or `--map`       |      MAP      |
+|     `-e` or `--entity`      |    ENTITY     |
+|      `-p` or `--path`       |     PATH      |
+|      `-f` or `--file`       |     FILE      |
+| `-d` or `--file-for-delete` | FILEFORDELETE |
+|      `-c` or `--cron`       |     CRON      |
