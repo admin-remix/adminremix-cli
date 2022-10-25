@@ -29,8 +29,9 @@ async function doSync(
     return;
   }
 
-  let file = options.file || env.CSV || env.csv;
-  let fileForDelete = options.fileForDelete || env.CSVDELETE || env.csvdelete;
+  let file = options.file || env.FILE || env.file;
+  let fileForDelete =
+    options.fileForDelete || env.FILEFORDELETE || env.filefordelete;
   if (!file && !fileForDelete) {
     console.log("CSV file not specified");
     return;
