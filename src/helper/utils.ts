@@ -1,8 +1,10 @@
 import { readFileSync, existsSync, createReadStream } from "fs";
 import { parse } from "dotenv";
 import { parse as papaparse } from "papaparse";
+import { track } from "temp";
 
-export const GRAPHQL_ENDPOINT = 'https://dev-graphql.adminremix.com';
+export const GRAPHQL_ENDPOINT = "https://dev-graphql.adminremix.com";
+export const temp = track();
 
 const ENV_FILE = ".env";
 const MAP_FILE = "map.json";
@@ -12,16 +14,18 @@ export function hasENV(): boolean {
 }
 
 export function readENV(): Record<string, string> {
-  if (!hasENV()) {
-    throw new Error(`Error: Config not found.\nMake sure to put the token in a ${ENV_FILE} file in the current directory.`);
-  }
+  if (!hasENV()) return {};
   const content = readFileSync(ENV_FILE, "utf-8");
   return parse(content);
 }
 
 export function readMapping(file?: string): Record<string, string> {
   if (!existsSync(file || MAP_FILE)) {
-    throw new Error(`Error: Mapper not found.\nMake sure to put the CSV column mapper as ${file || MAP_FILE} file in the current directory.`);
+    throw new Error(
+      `Error: Mapper not found.\nMake sure to put the CSV column mapper as ${
+        file || MAP_FILE
+      } file in the current directory.`
+    );
   }
   const content = readFileSync(file || MAP_FILE, "utf-8");
   return JSON.parse(content);
@@ -53,9 +57,9 @@ export function parseCSV(file: string): Promise<Record<string, string>[]> {
       },
       error: (e) => {
         rej(e);
-      }
+      },
     });
-  })
+  });
 }
 
 export type KeyVal<T = string> = Record<string, T>;
@@ -68,4 +72,18 @@ export function mapRow(csvRow: KeyVal, map: KeyVal): Record<string, any> {
     }
     return acc;
   }, {} as Record<string, any>);
+}
+
+export async function writeToTempFile(text: string): Promise<string> {
+  return new Promise((res, rej) => {
+    const stream = temp.createWriteStream();
+    stream.once("open", () => {
+      stream.write(text);
+      stream.end();
+      res(stream.path.toString());
+    });
+    stream.once("error", (e) => {
+      rej(e);
+    });
+  });
 }

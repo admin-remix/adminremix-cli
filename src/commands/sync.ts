@@ -1,15 +1,15 @@
-import { readENV, readMapping, GRAPHQL_ENDPOINT } from "../helper/utils";
-import { gql, GraphQLClient } from 'graphql-request';
+import { readENV, readMapping, GRAPHQL_ENDPOINT, temp } from "../helper/utils";
+import { gql, GraphQLClient } from "graphql-request";
 import { syncUsers } from "../actions/syncUsers";
 import { schedule, validate } from "node-cron";
 import { lstatSync, existsSync } from "fs";
 import AdmZip from "adm-zip";
-import { track } from "temp";
 import { join } from "path";
 
-const temp = track();
-
-async function doSync(options: Record<string, string>, environment?: Record<string, string>): Promise<void> {
+async function doSync(
+  options: Record<string, string>,
+  environment?: Record<string, string>
+): Promise<void> {
   const env = environment || readENV();
 
   const entity = options.entity || env.entity || env.ENTITY;
@@ -20,6 +20,15 @@ async function doSync(options: Record<string, string>, environment?: Record<stri
     console.log("Unsupported entity: '%s'", entity);
     return;
   }
+
+  const token = options.token || env.token || env.TOKEN;
+  if (!token) {
+    console.log(
+      "Error: Token not specified\nPlease provide token through option or add token in the .env file"
+    );
+    return;
+  }
+
   let file = options.file || env.CSV || env.csv;
   let fileForDelete = options.fileForDelete || env.CSVDELETE || env.csvdelete;
   if (!file && !fileForDelete) {
@@ -31,7 +40,8 @@ async function doSync(options: Record<string, string>, environment?: Record<stri
     const stat = lstatSync(folder);
     if (stat.isFile()) {
       const zip = new AdmZip(folder);
-      const entries = zip.getEntries().map(m => m.entryName);
+      const entries = zip.getEntries().map((m) => m.entryName);
+      if (options.verbose) console.log("Path is a zip file.");
       if (file && !entries.includes(file)) {
         throw new Error(`File ${file} does not exist in zip.`);
       }
@@ -39,9 +49,9 @@ async function doSync(options: Record<string, string>, environment?: Record<stri
         throw new Error(`File ${fileForDelete} does not exist in zip.`);
       }
       const tempFolder = temp.mkdirSync({
-        prefix: "adminremix"
+        prefix: "adminremix",
       });
-      if (options.verbose) console.log('Unzipping to:', tempFolder);
+      if (options.verbose) console.log("Unzipping to:", tempFolder);
       if (file) {
         zip.extractEntryTo(file, tempFolder);
         file = join(tempFolder, file);
@@ -57,10 +67,13 @@ async function doSync(options: Record<string, string>, environment?: Record<stri
       }
       if (fileForDelete) {
         fileForDelete = join(folder, fileForDelete);
-        if (!existsSync(fileForDelete)) throw new Error(`File ${fileForDelete} does not exist`);
+        if (!existsSync(fileForDelete))
+          throw new Error(`File ${fileForDelete} does not exist`);
       }
     } else {
-      throw new Error(`Path ${folder} does not exist`);
+      throw new Error(
+        `Path ${folder} does not exist.\nMake sure the path is a directory or a zip file.`
+      );
     }
   }
 
@@ -70,12 +83,9 @@ async function doSync(options: Record<string, string>, environment?: Record<stri
     return;
   }
 
-  const token = env.token || env.TOKEN;
-  if (!token) {
-    console.log("Error: .env file does not have token\nPlease add token in the .env file");
-    return;
-  }
-  const client = new GraphQLClient(GRAPHQL_ENDPOINT, { headers: { 'x-api-key': token } });
+  const client = new GraphQLClient(GRAPHQL_ENDPOINT, {
+    headers: { "x-api-key": token },
+  });
   {
     if (options.verbose) console.log("Verifying AssetRemix account..");
     const data = await client.request<{
@@ -83,15 +93,33 @@ async function doSync(options: Record<string, string>, environment?: Record<stri
         email: string;
         tenant: {
           displayName: string;
+        };
+      };
+    }>(
+      gql`
+        query {
+          me {
+            email
+            tenant {
+              displayName
+            }
+          }
         }
-      }
-    }>(gql`query { me { email tenant { displayName } } }`);
+      `
+    );
     if (!data?.me) {
-      console.log("Error: Invalid token.\nPlease generate an API token from your AssetRemix workspace.");
+      console.log(
+        "Error: Invalid token.\nPlease generate an API token from your AssetRemix workspace."
+      );
       return;
     }
     if (options.verbose) console.log("Token is valid");
-    if (options.verbose) console.log("Account: %s\nWorkspace: %s", data.me.email, data.me.tenant.displayName);
+    if (options.verbose)
+      console.log(
+        "Account: %s\nWorkspace: %s",
+        data.me.email,
+        data.me.tenant.displayName
+      );
   }
 
   const map = readMapping(mapFile as string);
@@ -103,8 +131,7 @@ async function doSync(options: Record<string, string>, environment?: Record<stri
       map,
       file: file as string,
       fileForDelete: fileForDelete as string,
-      folder
-    })
+    });
   }
   if (result) console.log("Request sent successfully");
 }
@@ -120,16 +147,17 @@ export default async function (options: Record<string, string>): Promise<void> {
       if (!validate(cron)) throw new Error("Cron expression is wrong.");
       console.log("Schedule set. Waiting..");
       schedule(cron, () => {
-        doSync(options).then(() => {
-          console.log("Waiting for next interval..");
-          temp.cleanupSync();
-        }).catch(e => {
-          console.log("Error: %s", (e as Error).message);
-          temp.cleanupSync();
-        });
-      })
+        doSync(options)
+          .then(() => {
+            console.log("Waiting for next interval..");
+            temp.cleanupSync();
+          })
+          .catch((e) => {
+            console.log("Error: %s", (e as Error).message);
+            temp.cleanupSync();
+          });
+      });
     }
-
   } catch (e) {
     console.log("Error: %s", (e as Error).message);
   }

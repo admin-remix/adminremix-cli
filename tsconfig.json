@@ -2,18 +2,12 @@
   "compilerOptions": {
     "target": "es2018",
     "module": "commonjs",
-    "lib": [
-      "es2019",
-      "esnext.asynciterable",
-      "DOM"
-    ],
+    "lib": ["es2019", "esnext.asynciterable", "DOM"],
     "declaration": true,
     "outDir": "lib",
     "rootDir": "src",
     "strict": true,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "esModuleInterop": true,
     "resolveJsonModule": true
   }
