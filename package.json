@@ -11,7 +11,8 @@
     "build": "tsc -p . && pkg .",
     "eslint": "eslint . --ext .js,.ts",
     "prettier:write": "prettier --write .",
-    "prettier:check": "prettier --check ."
+    "prettier:check": "prettier --check .",
+    "prepare": "husky install"
   },
   "husky": {
     "hooks": {

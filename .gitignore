@@ -31,3 +31,4 @@ map.json
 _temp.json
 
 /dist
+.husky
